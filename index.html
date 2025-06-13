@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ORDEM DE SERVIÇO</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            border-radius: 4px;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .a4 {
+            background: white;
+            width: 100%;
+            max-width: 210mm;
+            min-height: 297mm;
+            padding: 10mm; /* Mantido em 10mm para mais largura na tela */
+            margin: auto;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h3, label {
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 10px;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .input-error {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .col-4 {
+            flex: 1 1 calc(33.333% - 10px);
+            min-width: 150px;
+        }
+
+        .col-6 {
+            flex: 1 1 calc(50% - 5px);
+            min-width: 200px;
+        }
+
+        .col-full-width {
+            flex: 1 1 100%;
+        }
+
+        .parts-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .parts-header-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: none;
+        }
+
+        .parts-header-row label {
+            font-weight: bold;
+            text-transform: none;
+        }
+
+        .part-item-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+
+        .part-item-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .col-parts-quant {
+            flex: 0 0 15%;
+            max-width: 80px;
+        }
+
+        .col-parts-name {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .col-parts-value {
+            flex: 0 0 20%;
+            max-width: 120px;
+        }
+
+        .part-item-row input[type="text"],
+        .part-item-row input[type="number"] {
+            margin-bottom: 0;
+        }
+
+        .totais {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .totais div {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .submit-btn {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .submit-btn button {
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn button:hover {
+            background-color: #218838;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal .content {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 350px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal .content p {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .modal .content button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal.modal-sucesso .content button {
+             background-color: #28a745;
+        }
+
+        .modal.modal-erro .content button {
+            background-color: #dc3545;
+        }
+
+        .modal .content button:hover {
+            opacity: 0.9;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85em;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* --- Estilo para o Cabeçalho --- */
+        .form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Alinha logo à esquerda e título ao centro */
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            text-align: center; /* Centraliza o texto dentro do cabeçalho */
+        }
+
+        .form-header .title-container {
+            flex-grow: 1; /* Permite que o contêiner do título ocupe o espaço restante */
+            text-align: center;
+        }
+
+        .form-header img {
+            width: 160px; /* Tamanho da logo */
+            height: 160px; /* Tamanho da logo */
+            object-fit: contain; /* Garante que a imagem se ajuste sem cortar */
+            margin-right: 15px; /* Espaço entre a logo e o título */
+        }
+
+        .form-header h1 {
+            margin: 0; /* Remover margens padrão do h1 */
+            font-size: 1.8em; /* Tamanho da fonte do título principal */
+            color: #333;
+        }
+
+        .form-header p.subtitle {
+            font-size: 0.85em; /* AUMENTADO: Fonte do subtítulo */
+            color: #666;
+            margin-top: 5px; /* Espaço entre o título e o subtítulo */
+            margin-bottom: 0;
+            text-transform: none; /* Não transformar para uppercase */
+        }
+
+        .form-header p.address {
+            font-size: 0.85em; /* AUMENTADO: Fonte do endereço */
+            color: #666;
+            margin-top: 2px; /* Espaço entre o subtítulo e o endereço */
+            margin-bottom: 0;
+            text-transform: none; /* Não transformar para uppercase */
+        }
+        
+        /* ESTILOS DE IMPRESSÃO */
+        @page {
+            margin: 0.3cm !important; /* Margens da página inteira para impressão */
+        }
+
+        @media print {
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow: visible !important; /* Permitir overflow para conteúdo maior que a página */
+            }
+            body {
+                background: none;
+            }
+            .a4 {
+                box-shadow: none;
+                margin: 0 auto !important; /* Centralizar na página sem position absolute */
+                padding: 0.5mm !important; /* Margens internas do formulário finas */
+                min-height: unset !important; /* Remover min-height em impressão */
+                width: 100% !important;
+                max-width: 210mm !important; /* Manter a largura máxima A4 */
+                overflow: visible !important; /* Permitir overflow */
+                
+                position: static !important; /* Resetar position para o fluxo normal */
+                top: unset !important;
+                left: unset !important;
+            }
+            .submit-btn, .modal, .loading-overlay {
+                display: none !important;
+            }
+
+            /* Estilos de impressão para o cabeçalho */
+            .form-header {
+                display: flex !important; /* Forçar flexbox na impressão */
+                align-items: center !important;
+                justify-content: space-between !important;
+                margin-bottom: 5px !important; /* Margem menor para impressão */
+                padding-bottom: 2px !important;
+                border-bottom: 1px solid #ccc !important;
+            }
+
+            .form-header img {
+                width: 80px !important; /* Reduzir o tamanho da logo para impressão */
+                height: 80px !important;
+                margin-right: 5px !important; /* Espaço menor */
+            }
+
+            .form-header h1 {
+                flex-grow: 1 !important;
+                text-align: center !important;
+                font-size: 1.2em !important; /* Ajustar tamanho da fonte do título para impressão */
+                margin: 0 !important;
+            }
+
+            .form-header p.subtitle, .form-header p.address {
+                font-size: 0.7em !important; /* AUMENTADO: Ajustar fonte do subtítulo e endereço para impressão */
+                margin-top: 2px !important;
+                margin-bottom: 0 !important;
+            }
+
+            h3, label,
+            input[type="text"], input[type="tel"], input[type="date"], input[type="number"],
+            textarea {
+                /* As margens e paddings serão as mesmas da tela */
+            }
+
+            .section {
+                margin-bottom: 0.2mm !important; /* Ajustar margem da seção para algo mais compacto */
+                padding: 0 !important; /* Remover padding da seção */
+                page-break-inside: avoid !important; /* Evitar quebra dentro da seção */
+            }
+
+            .row, .parts-header-row, .part-item-row, .totais {
+                flex-direction: row !important; /* Forçar layout de linha para impressão */
+                gap: 10px !important; /* Restaurar o gap do layout desktop */
+                flex-wrap: wrap !important; /* Permitir quebra de linha se necessário, mas as colunas tentarão ficar em uma linha */
+                overflow: visible !important; /* Permitir que o conteúdo se estenda */
+                page-break-inside: avoid !important; /* Evitar quebra dentro da linha */
+            }
+
+            /* Especificamente direcionar as colunas dentro dessas linhas para impressão */
+            .row > div,
+            .part-item-row > div {
+                width: auto !important; /* Deixar o conteúdo ou a base flex determinar a largura */
+                flex: unset !important; /* Resetar flex */
+            }
+
+            /* Reaplicar regras flex do desktop para as colunas especificamente para impressão */
+            .col-4 {
+                flex: 1 1 calc(33.333% - 10px) !important;
+                min-width: 150px !important;
+            }
+            .col-6 {
+                flex: 1 1 calc(50% - 5px) !important;
+                min-width: 200px !important;
+            }
+            .col-full-width {
+                flex: 1 1 100% !important;
+            }
+            .col-parts-quant {
+                flex: 0 0 15% !important;
+                max-width: 80px !important;
+            }
+            .col-parts-name {
+                flex: 1 !important;
+                min-width: 150px !important;
+            }
+            .col-parts-value {
+                flex: 0 0 20% !important;
+                max-width: 120px !important;
+            }
+
+            /* Esconder a label de dados para impressão, pois é para exibição móvel */
+            .part-item-row div[data-label]::before {
+                display: none !important;
+            }
+            
+            /* Ajustes gerais para garantir que tudo apareça com a fonte e padding corretos */
+            h3 { font-size: 0.9em !important; }
+            label { font-size: 0.8em !important; }
+            input, textarea { font-size: 0.8em !important; padding: 1mm !important; }
+            .error-message { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+            .a4 {
+                padding: 15mm;
+                min-height: auto;
+            }
+
+            .row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .col-4, .col-6, .col-full-width, .col-parts-quant, .col-parts-name, .col-parts-value {
+                flex: 1 1 100%;
+                min-width: unset;
+                max-width: unset;
+            }
+
+            .totais {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .totais div {
+                width: 100%;
+            }
+
+            .parts-header-row {
+                display: none;
+            }
+            .part-item-row {
+                flex-direction: column;
+                border: 1px solid #ddd;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 8px;
+            }
+            .col-parts-quant, .col-parts-name, .col-parts-value {
+                width: 100%;
+                max-width: unset;
+                flex: unset;
+            }
+            .part-item-row div[data-label]::before {
+                content: attr(data-label);
+                font-weight: bold;
+                display: block;
+                margin-bottom: 5px;
+                text-transform: capitalize;
+            }
+            .part-item-row input {
+                width: 100%;
+            }
+        }
+
+        label {
+            text-transform: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="a4">
+        <!-- Novo Cabeçalho com Logo e Título -->
+        <div class="form-header">
+           <img src="logo.png" alt="Descrição da imagem">
+            <div class="title-container">
+                <h1>SERVIÇOS AUTOCENTER</h1>
+                <p class="subtitle">Serviços especializados e cuidado com o seu carro.</p>
+                <p class="address">Rua alberto Leitão, 2514 Pmpas - Natal RN</p>
+            </div>
+            <div></div> <!-- Elemento vazio para equilibrar o flexbox, se necessário -->
+        </div>
+
+        <form id="ordemServicoForm">
+
+            <div class="section">
+                <div class="row">
+                    <div class="col-4">
+                        <label for="data">Data</label>
+                        <input type="date" id="data" name="Data" required />
+                    </div>
+                    <div class="col-4">
+                        <label for="ordem">Ordem Nº</label>
+                        <input type="text" id="ordem" name="Órdem" readonly />
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>INFORMAÇÕES DO CLIENTE</h3>
+                <div class="row">
+                    <div class="col-6">
+                        <label for="nome">Nome</label>
+                        <input type="text" id="nome" name="Nome" required />
+                    </div>
+                    <div class="col-6">
+                        <label for="telefone">Telefone</label>
+                        <input type="tel" id="telefone" name="Telefone" placeholder="Digite o telefone" pattern="[0-9.-]+" title="Permitido: números, hifens e pontos." />
+                        <span class="error-message" id="telefone-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>INFORMAÇÕES DO VEÍCULO</h3>
+                <div class="row">
+                    <div class="col-full-width">
+                        <label for="veiculo">Veículo</label>
+                        <input type="text" id="veiculo" name="Veículo" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4"> <!-- ALTERADO: Usando col-4 para Modelo -->
+                        <label for="modelo">Modelo</label>
+                        <input type="text" id="modelo" name="Modelo" />
+                    </div>
+                    <div class="col-4"> <!-- ALTERADO: Usando col-4 para Cor -->
+                        <label for="cor">Cor</label>
+                        <input type="text" id="cor" name="Cor" />
+                    </div>
+                    <div class="col-4"> <!-- ALTERADO: Usando col-4 para Matrícula -->
+                        <label for="matricula">Matrícula</label>
+                        <input type="text" id="matricula" name="Matrícula" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <label for="servico">Serviço realizado</label>
+                <textarea id="servico" name="Serviço" rows="2"></textarea>
+            </div>
+
+            <div class="section">
+                <h3>PEÇAS UTILIZADAS</h3>
+                <div class="parts-container">
+                    <div class="parts-header-row">
+                        <div class="col-parts-quant"><label>Quantidade</label></div>
+                        <div class="col-parts-name"><label>Nome da peça</label></div>
+                        <div class="col-parts-value"><label>Valor (€)</label></div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant" name="PeçaQuant" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça" name="Nomepeça" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças" name="Valorpeças" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant1" name="PeçaQuant1" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça1" name="Nomepeça1" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças1" name="Valorpeças1" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças1-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant2" name="PeçaQuant2" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça2" name="Nomepeça2" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças2" name="Valorpeças2" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças2-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant3" name="PeçaQuant3" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça3" name="Nomepeça3" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças3" name="Valorpeças3" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças3-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant4" name="PeçaQuant4" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça4" name="Nomepeça4" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças4" name="Valorpeças4" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças4-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant5" name="PeçaQuant5" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça5" name="Nomepeça5" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças5" name="Valorpeças5" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças5-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant6" name="PeçaQuant6" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça6" name="Nomepeça6" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças6" name="Valorpeças6" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças6-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant7" name="PeçaQuant7" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça7" name="Nomepeça7" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças7" name="Valorpeças7" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças7-error"></span>
+                        </div>
+                    </div>
+                    <div class="part-item-row">
+                        <div class="col-parts-quant" data-label="Quantidade">
+                            <input type="number" id="PeçaQuant8" name="PeçaQuant8" min="0" value="0" />
+                        </div>
+                        <div class="col-parts-name" data-label="Nome da peça">
+                            <input type="text" id="Nomepeça8" name="Nomepeça8" />
+                        </div>
+                        <div class="col-parts-value" data-label="Valor (€)">
+                            <input type="number" id="Valorpeças8" name="Valorpeças8" step="0.01" min="0" value="0.00" />
+                            <span class="error-message" id="Valorpeças8-error"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section totais">
+                <div>
+                    <label for="valormobra">Valor mão de obra</label>
+                    <input type="number" id="valormobra" name="Valormobra" step="0.01" value="0.00" />
+                    <span class="error-message" id="valormobra-error"></span>
+                </div>
+                <div>
+                    <label for="valortotalpecas">Total peças</label>
+                    <input type="text" id="valortotalpecas" name="Valortotalpeças" readonly value="€ 0,00" />
+                </div>
+                <div>
+                    <label for="valortotalordem">Total geral</label>
+                    <input type="text" id="valortotalordem" name="Valortotalordemserviço" readonly value="€ 0,00" />
+                </div>
+            </div>
+
+            <div class="submit-btn">
+                <button type="button" id="btnRegistrar">REGISTRAR ORDEM DE SERVIÇO</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal modal-sucesso" id="modalSucesso">
+        <div class="content">
+            <p>ORDEM REGISTRADA COM SUCESSO!</p>
+            <button id="fecharModalSucesso">FECHAR</button>
+        </div>
+    </div>
+
+    <div class="modal modal-erro" id="modalErro">
+        <div class="content">
+            <p id="errorMessageText"></p>
+            <button id="fecharModalErro">FECHAR</button>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Wrapped the script content in an IIFE to avoid global variable re-declaration errors.
+        (function() {
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycby30W9zWA8jbhOCMY3j1EGtzpBTyOJ8nLi6zzEfCHVQDjOXrJ3rxoKMuMLqNVw5JgyE/exec';
+
+            function showError(fieldId, message) {
+                const errorElement = document.getElementById(fieldId + '-error');
+                const inputElement = document.getElementById(fieldId);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                }
+                if (inputElement) {
+                    inputElement.classList.add('input-error');
+                }
+            }
+
+            function clearError(fieldId) {
+                const errorElement = document.getElementById(fieldId + '-error');
+                const inputElement = document.getElementById(fieldId);
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
+                if (inputElement) {
+                    inputElement.classList.remove('input-error');
+                }
+            }
+
+            function formatEuro(value) {
+                return new Intl.NumberFormat('pt-PT', {
+                    style: 'currency',
+                    currency: 'EUR',
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+
+            async function fetchNextOS() {
+                try {
+                    const resp = await fetch(GAS_URL);
+                    const data = await resp.json();
+                    document.getElementById('ordem').value = data.nextOS;
+                } catch (err) {
+                    console.error('Erro ao buscar nextOS:', err);
+                    document.getElementById('ordem').value = 'ERRO';
+                    showErrorMessage('Erro ao carregar o próximo número de ordem de serviço. Por favor, tente novamente mais tarde.');
+                }
+            }
+
+            function calcularTotais() {
+                let totalPecas = 0;
+                let hasError = false;
+
+                for (let i = 0; i <= 8; i++) {
+                    const idx = (i === 0 ? '' : i);
+                    const quantInput = document.getElementById('PeçaQuant' + idx);
+                    const valorInput = document.getElementById('Valorpeças' + idx);
+                    const nomePecaInput = document.getElementById('Nomepeça' + idx);
+
+                    const qtd = parseFloat(quantInput.value) || 0;
+                    const valor = parseFloat(valorInput.value) || 0;
+
+                    if (quantInput.value !== '' && (isNaN(qtd) || qtd < 0)) {
+                        showError(quantInput.id, 'Insira uma quantidade numérica válida e não negativa.');
+                        hasError = true;
+                    } else {
+                        clearError(quantInput.id);
+                    }
+
+                    if (valorInput.value !== '' && (isNaN(valor) || valor < 0)) {
+                        showError(valorInput.id, 'Insira um valor numérico válido e não negativo.');
+                        hasError = true;
+                    } else {
+                        clearError(valorInput.id);
+                    }
+
+                    if (!hasError) {
+                        totalPecas += (qtd * valor);
+                    }
+                }
+
+                const valorMobraInput = document.getElementById('valormobra');
+                const valorMobra = parseFloat(valorMobraInput.value) || 0;
+
+                if (valorMobraInput.value !== '' && (isNaN(valorMobra) || valorMobra < 0)) {
+                    showError(valorMobraInput.id, 'Insira um valor numérico válido e não negativo.');
+                    hasError = true;
+                } else {
+                    clearError(valorMobraInput.id);
+                }
+
+                if (!hasError) {
+                    document.getElementById('valortotalpecas').value = formatEuro(totalPecas);
+                    const totalOrdem = totalPecas + valorMobra;
+                    document.getElementById('valortotalordem').value = formatEuro(totalOrdem);
+                } else {
+                    document.getElementById('valortotalpecas').value = '€ 0,00';
+                    document.getElementById('valortotalordem').value = '€ 0,00';
+                }
+                return !hasError;
+            }
+
+            function showSuccessModal() {
+                document.getElementById('modalSucesso').style.display = 'flex';
+            }
+
+            function hideSuccessModal() {
+                document.getElementById('modalSucesso').style.display = 'none';
+            }
+
+            function showErrorMessage(message) {
+                document.getElementById('errorMessageText').textContent = message;
+                document.getElementById('modalErro').style.display = 'flex';
+            }
+
+            function hideErrorMessage() {
+                document.getElementById('modalErro').style.display = 'none';
+            }
+
+            function showLoading() {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+            }
+
+            function hideLoading() {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                fetchNextOS();
+
+                for (let i = 0; i <= 8; i++) {
+                    const idx = (i === 0 ? '' : i);
+                    document.getElementById('PeçaQuant' + idx).addEventListener('input', calcularTotais);
+                    document.getElementById('Valorpeças' + idx).addEventListener('input', calcularTotais);
+                    document.getElementById('Nomepeça' + idx).addEventListener('input', calcularTotais);
+                    document.getElementById('PeçaQuant' + idx).addEventListener('focus', () => clearError('PeçaQuant' + idx));
+                    document.getElementById('Valorpeças' + idx).addEventListener('focus', () => clearError('Valorpeças' + idx));
+                }
+                document.getElementById('valormobra').addEventListener('input', calcularTotais);
+                document.getElementById('valormobra').addEventListener('focus', () => clearError('valormobra'));
+
+                const telefoneInput = document.getElementById('telefone');
+                telefoneInput.addEventListener('input', () => {
+                    const telValue = telefoneInput.value.replace(/[^0-9.-]/g, '');
+                    telefoneInput.value = telValue;
+                });
+
+                document.getElementById('btnRegistrar').addEventListener('click', async () => {
+                    const form = document.getElementById('ordemServicoForm');
+                    const isFormValid = form.checkValidity() && calcularTotais();
+
+                    if (!isFormValid) {
+                        showErrorMessage('Por favor, corrija os erros no formulário antes de registrar a ordem de serviço.');
+                        return;
+                    }
+
+                    showLoading();
+
+                    const formData = new FormData(form);
+                    const body = new URLSearchParams(formData);
+
+                    try {
+                        const response = await fetch(GAS_URL, {
+                            method: 'POST',
+                            body: body
+                        });
+                        const result = await response.json();
+                        hideLoading();
+
+                        if (result.status === 'success') {
+                            showSuccessModal();
+                        } else {
+                            showErrorMessage('ERRO AO REGISTRAR:\n' + (result.message || 'Erro desconhecido.'));
+                        }
+                    } catch (err) {
+                        hideLoading();
+                        showErrorMessage('FALHA NA CONEXÃO:\n' + (err.message || 'Verifique sua conexão com a internet.'));
+                    }
+                });
+
+                document.getElementById('fecharModalSucesso').addEventListener('click', () => {
+                    hideSuccessModal();
+                    const form = document.getElementById('ordemServicoForm');
+                    form.reset();
+                    fetchNextOS();
+                    document.getElementById('valortotalpecas').value = '€ 0,00';
+                    document.getElementById('valortotalordem').value = '€ 0,00';
+                    const errorMessages = document.querySelectorAll('.error-message');
+                    errorMessages.forEach(el => el.textContent = '');
+                    const inputErrors = document.querySelectorAll('.input-error');
+                    inputErrors.forEach(el => el.classList.remove('input-error'));
+                    calcularTotais();
+                });
+
+                document.getElementById('fecharModalErro').addEventListener('click', () => {
+                    hideErrorMessage();
+                });
+
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                document.getElementById('data').value = `${year}-${month}-${day}`;
+
+                calcularTotais();
+            });
+        })(); // IIFE ends here
+    </script>
+</body>
+</html>
