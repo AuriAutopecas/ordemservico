@@ -137,7 +137,6 @@
 
 
 </head>
-
 <body class="bg-gray-100 flex flex-col items-center">
 
     <div class="w-full max-w-4xl bg-white p-4 rounded-xl shadow-lg mt-4">
@@ -182,12 +181,12 @@
                         <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-0.5" for="cpf-cliente">
                             NIF
                         </label>
-                        <input class="form-input uppercase" id="cpf-cliente" name="cpf" type="text" placeholder="000000000" maxlength="9">
+                        <input class="form-input uppercase" id="cpf-cliente" name="Cpf" type="text" placeholder="000.000.000" maxlength="11">
                         <span id="cpf-cliente-error" class="error-message"></span>
                     </div>
                     <div class="w-full md:w-1/4 px-3">
                         <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-0.5" for="telefone-cliente">
-                            Telefone
+                            Telemóvel
                         </label>
                         <input class="form-input uppercase" id="telefone-cliente" name="Telefone" type="text" placeholder="(00) 00000-0000" maxlength="15">
                         <span id="telefone-cliente-error" class="error-message"></span>
@@ -283,7 +282,7 @@
                     <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-0.5" for="iva">
                         IVA %
                     </label>
-                    <input class="form-input text-right" id="iva" name="Ivapercentual" type="number" placeholder="0" min="0" value="23" step="0.01">
+                    <input class="form-input text-right" id="iva" name="Ivapercentual" type="number" placeholder="0" min="0" value="17" step="0.01">
                 </div>
                 <div class="w-full md:w-1/4 px-3">
                     <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-0.5" for="total-geral">
@@ -293,21 +292,18 @@
                 </div>
             </div>
 
-            <div class="flex justify-center mt-4">
-                <button type="submit" id="submitButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
-                    REGISTRAR ORDEM DE SERVIÇO                
-		</button>
+           <div class="flex justify-center mt-4 gap-4"> <button type="submit" id="submitButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+        REGISTRAR ORDEM DE SERVIÇO
+    </button>
 
- <a href="https://auriautopecas.github.io/osrelatorio/" target="_blank"
-   class="bg-green-600 text-white font-bold  px-4 py-2 rounded hover:bg-green-700 transition ml-6">
-   RELATÓRIO
-</a>
-
-
+    <a href="https://auriautopecas.github.io/osrelatorio/" target="_blank"
+       class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 inline-flex items-center justify-center text-center">
+        RELATÓRIO DE OS
+    </a>
+</div>
 
 
             </div>
-
         </form>
 
         <div id="feedback-message" class="mt-2 text-center text-lg hidden"></div>
@@ -471,7 +467,7 @@
         function applyCpfMask(input) {
             input.addEventListener('input', function(e) {
                 let value = e.target.value.replace(/\D/g, ''); 
-                if (value.length > 11) value = value.slice(0, 11);
+                if (value.length > 09) value = value.slice(0, 09);
                 if (value.length > 9) {
                     value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
                 } else if (value.length > 6) {
@@ -624,10 +620,11 @@ function parseNumber(value) {
                 isValid = false;
             }
 
-            
-
-
-
+            const cpf = cpfClienteInput.value.replace(/\D/g, '');
+            if (cpf.length > 0 && cpf.length !== 09) {
+                showErrorMessage(document.getElementById('cpf-cliente-error'), 'NIF inválido. Deve conter 09 números.');
+                isValid = false;
+            }
 
             const telefone = telefoneClienteInput.value.replace(/\D/g, '');
             if (telefone.length > 0 && telefone.length < 8) {
@@ -706,7 +703,7 @@ function parseNumber(value) {
                 pecasContainer.appendChild(criarLinhaPeca(i));
             }
 
-           
+            applyCpfMask(cpfClienteInput);
             applyPhoneMask(telefoneClienteInput);
             applyPlateMask(matriculaInput);
 
@@ -795,6 +792,12 @@ function parseNumber(value) {
 
             });
         });
+
+
+form.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        return false;
 
 
     </script>
